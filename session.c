@@ -518,9 +518,9 @@ int opt_to_gvar(char *key, char *value, struct sr_config *src)
 {
 	const struct sr_key_info *srci, *srmqi;
 	double tmp_double, dlow, dhigh;
-	uint64_t tmp_u64, p, q, low, high, mqflags;
+	uint64_t tmp_u64, p, q, low, high, mqflags, dac_len, dac_int[16384];
 	uint32_t mq;
-	GVariant *rational[2], *range[2], *gtup[2];
+	GVariant *rational[2], *range[2], *gtup[2], *dac[16384];
 	GVariantBuilder *vbl;
 	gboolean tmp_bool;
 	gchar **keyval;
@@ -642,6 +642,14 @@ int opt_to_gvar(char *key, char *value, struct sr_config *src)
 			src->data = g_variant_new_tuple(gtup, 2);
 		}
 		break;
+  case SR_T_UINT64_LIST:
+    if ((ret = sr_parse_dac(value, dac_int, &dac_len)) != SR_OK)
+      break;
+    for(uint64_t i=0; i<dac_len; i++){
+      dac[i] = g_variant_new_uint64(dac_int[i]);
+    }
+    src->data = g_variant_new_tuple(dac, dac_len);
+    break;
 	default:
 		g_critical("Unknown data type specified for option '%s' "
 			   "(driver implementation bug?).", key);
